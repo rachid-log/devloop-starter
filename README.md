@@ -3,12 +3,13 @@
 A ready-to-use template for projects watched by [Devloop](https://github.com/rachid-log/devloop),
 plus a cheat sheet of every command you need.
 
-Devloop looks at your projects every hour. For each active project, an AI agent proposes
+Every 10 minutes Devloop looks at your idle projects. For each one, an AI agent proposes
 **one** improvement. You approve or reject it in Telegram. Approved work is written on its
-own branch, and it is merged only when you ask.
+own branch, in its own folder, and it is merged only when you ask.
 
 ```text
-every hour:  watch -> observe -> (you approve) -> execute -> commit -> (you ask) -> merge
+every 10 min:  watch -> observe -> (you approve)
+every 2 min:   execute -> commit -> (you ask) -> merge
 ```
 
 ---
@@ -46,7 +47,8 @@ Devloop finds projects by looking for a `.watched.json` file.
   "goal": "Improve reliability and user experience",
   "domain": "General",
   "watch_freq": "1h",
-  "active": true
+  "active": true,
+  "observe_effort": "high"
 }
 ```
 
@@ -55,8 +57,13 @@ Devloop finds projects by looking for a `.watched.json` file.
 | `name` | Display name. Optional: the folder name is used if empty. |
 | `goal` | What the agent should care about. Be specific: it shapes every proposal. |
 | `domain` | `General`, `UX/UI`, `SEO`, `BL` (business logic) or `Security`. |
-| `watch_freq` | Saved for the future. Today every active project is checked each hour. |
+| `watch_freq` | Minimum time between two proposals: `10m`, `1h`, `1d`... |
 | `active` | Start value only. After the first `devloop watch`, the n8n table decides. |
+| `observe_model`, `observe_effort` | Optional. Model and effort that propose tasks for this project. |
+| `execute_model`, `execute_effort` | Optional. Model and effort that write the code for this project. |
+
+Effort is one of `low`, `medium`, `high`, `xhigh`, `max`. Empty optional fields use the
+values in the Devloop `.env`.
 
 Rules:
 
@@ -96,40 +103,50 @@ You can use the Telegram buttons, or these commands. Both do the same thing.
 
 | Command | Telegram button | What it does |
 | --- | --- | --- |
-| `devloop approve <task-id>` | ✅ Approve | The task is built in the next hourly cycle. |
-| `devloop reject <task-id> --reason "..."` | ❌ Reject | The task is closed. |
-| `devloop merge <task-id>` | 🚀 Merge to main & Push | Merge the finished branch into main and push. The command does it now; the button does it in the next cycle. |
-| (keep the branch) | 👀 Keep Branch | Do nothing yet. The branch stays for you to review. |
-| `devloop retry <task-id>` | 🔄 Retry | A failed task runs again in the next cycle. |
+| `devloop approve <task-id>` | ✅ Approve | The task is built within 2 minutes. |
+| `devloop reject <task-id> --reason "..."` | ❌ Reject | The task is closed. Works on finished tasks too. |
+| `devloop merge <task-id>` | 🚀 Merge to main & Push | Merge the finished branch into main and push. The command does it now; the button within 2 minutes. |
+| (keep the branch) | 👀 Keep Branch | Close the task but keep its branch for you to review. |
+| `devloop retry <task-id>` | 🔄 Retry | A failed task runs again within 2 minutes. |
 | (close it) | ❌ Dismiss | A failed task is closed. |
 
-### Run things now instead of waiting for the hour
+### Run things now instead of waiting
 
 ```bash
-devloop observe --repo my-app          # ask for a proposal now
-devloop execute --task <task-id>       # build an approved task now
-devloop loop                           # one full cycle now
-systemctl --user start devloop.service # one full cycle now, in the background
+devloop observe --repo my-app                   # ask for a proposal now (skips watch_freq)
+devloop execute --task <task-id>                # build an approved task now
+devloop loop                                    # one full cycle now
+systemctl --user start devloop-observe.service  # one observe run now, in the background
 ```
 
-## 5. The hourly timer
+## 5. The timers
+
+| Timer | Every | What it does |
+| --- | --- | --- |
+| `devloop-observe.timer` | 10 min | Proposes tasks for idle projects. |
+| `devloop-execute.timer` | 2 min | Builds approved tasks, then merges the ones you asked to merge. |
 
 ```bash
-systemctl --user list-timers devloop.timer    # when is the next run
-journalctl --user -u devloop.service -f       # watch the runs live
-systemctl --user disable --now devloop.timer  # stop the hourly runs
-systemctl --user enable --now devloop.timer   # start them again
+systemctl --user list-timers 'devloop-*'                     # when is the next run
+journalctl --user -u devloop-observe -u devloop-execute -f   # watch the runs live
+systemctl --user disable --now devloop-observe.timer devloop-execute.timer  # stop both
+systemctl --user enable --now devloop-observe.timer devloop-execute.timer   # start both
 ```
 
 ## 6. Rules you can rely on
 
 - **A human approves every task.** Devloop never approves its own work.
-- **One open task per project.** While a task waits for your answer, Devloop proposes
-  nothing new for that project. It keeps working on the other projects.
-- **Work happens on its own branch:** `devloop/<task-id>`. Your main branch is not touched
-  until you ask for a merge.
-- **Your unsaved work is kept.** Uncommitted changes are put in `git stash` first.
-  The stash name is written in the task details.
+- **One open task per project.** While a task waits for your answer, is being built, or is
+  finished but not merged, Devloop proposes nothing new for that project. It keeps working
+  on the other projects. Merge, Reject or Keep Branch frees the project.
+- **One job per project at a time.** A project lock stops observe and execute from working
+  on the same project together.
+- **No repeats.** The agent sees earlier proposals and their result, so it does not propose
+  a rejected or built idea again.
+- **Work happens on its own branch, in its own folder:** `devloop/<task-id>`, built in a
+  separate git worktree. Your folder, your branch and your unsaved work are not touched.
+- **Only a merge touches your folder.** If you have unsaved work then, it is put in
+  `git stash` first.
 - **A failed task leaves nothing behind.** If the agent fails, runs out of time
   (`DEVLOOP_EXECUTE_TIMEOUT`, 20 min here) or writes no code, the branch is deleted and you
   get a Telegram message with Retry and Dismiss.
@@ -144,9 +161,11 @@ Settings live in the `.env` file of the Devloop repo (not in your project).
 | `DEVLOOP_RUNNER` | Which agent CLI runs: `claude` or `agy`. |
 | `DEVLOOP_OBSERVE_MODEL` | Model that proposes tasks, e.g. `claude-sonnet-5-5`. |
 | `DEVLOOP_EXECUTE_MODEL` | Model that writes the code, e.g. `claude-opus-5-5`. |
+| `DEVLOOP_OBSERVE_EFFORT` | Effort for proposals (`high` by default). |
+| `DEVLOOP_EXECUTE_EFFORT` | Effort for writing the code. Empty = the CLI default. |
 | `DEVLOOP_OBSERVE_TIMEOUT` | Seconds allowed for a proposal. |
 | `DEVLOOP_EXECUTE_TIMEOUT` | Seconds allowed to write the code. |
-| `DEVLOOP_DIRTY_POLICY` | Uncommitted work: `stash` (default), `abort` or `reset`. |
+| `DEVLOOP_DIRTY_POLICY` | Uncommitted work during a merge: `stash` (default), `abort` or `reset`. |
 | `DEV_ROOT` | Folder scanned for projects. |
 
 After editing `.env`, run `devloop doctor` to check the result.
@@ -156,7 +175,7 @@ After editing `.env`, run `devloop doctor` to check the result.
 | Problem | Fix |
 | --- | --- |
 | My project is not in `devloop projects` | Check `.watched.json` is one valid JSON object, then `devloop watch`. |
-| It is listed but never gets proposals | It is off in n8n, or a task of it is still waiting for you (`devloop status --repo my-app`). |
+| It is listed but never gets proposals | It is off in n8n, a task of it is still open or unmerged (`devloop status --repo my-app`), or its `watch_freq` has not passed yet. |
 | A task failed | `devloop show <task-id>` shows why. Then `devloop retry <task-id>` or Dismiss. |
 | Task says "timed out" | The task was too big for the time limit. Split it, or raise `DEVLOOP_EXECUTE_TIMEOUT`. |
 | No Telegram messages | `devloop doctor`, and look at the Telegram lines. |
