@@ -58,7 +58,7 @@ Devloop finds projects by looking for a `.watched.json` file.
 | `goal` | What the agent should care about. Be specific: it shapes every proposal. |
 | `domain` | `General`, `UX/UI`, `SEO`, `BL` (business logic) or `Security`. |
 | `watch_freq` | Minimum time between two proposals: `10m`, `1h`, `1d`... |
-| `active` | Start value only. After the first `devloop watch`, the n8n table decides. |
+| `active` | Start value only. After the first `devloop watch`, Telegram (`/projects`) decides. |
 | `observe_model`, `observe_effort` | Optional. Model and effort that propose tasks for this project. |
 | `execute_model`, `execute_effort` | Optional. Model and effort that write the code for this project. |
 
@@ -71,14 +71,30 @@ Rules:
   Otherwise Devloop skips the project with a warning.
 - Commit `.watched.json` in the project repo.
 
-## 3. Turn a project on or off
+## 3. Control a project from Telegram
 
-The switch lives in n8n, not in the file:
+Send **`/projects`** to the bot (it is in the bot's menu). Tap a project to open its card:
 
-**n8n → Overview → Data tables → `devloop_projects` → column `active`** (`true` / `false`).
+| Button row | What it sets |
+| --- | --- |
+| ⏸ Turn OFF / ▶️ Turn ON | Whether Devloop works on the project. |
+| 🔍 Observe now | Ask for a proposal within about 2 minutes, without waiting for `watch_freq`. If none comes, the bot says why. |
+| 👁 Haiku / Sonnet / Opus / def | Model of the **watcher** (proposes tasks). |
+| 👁 low … max / def | Effort of the watcher. |
+| 🔨 Haiku / Sonnet / Opus / def | Model of the **builder** (writes the code). |
+| 🔨 low … max / def | Effort of the builder. |
+| ⏱ 10m … 1d | Minimum time between two proposals. |
+
+- `def` means: use the value in `.watched.json`, or else the Devloop `.env`.
+- Which value wins: **the task**, then **Telegram**, then **`.watched.json`**, then **`.env`**.
+- Once a value is set from Telegram, editing it in `.watched.json` has no effect.
+  Press `def` in Telegram to give control back to the file.
+- Only your Telegram account can press these buttons.
+
+The settings live in n8n: **n8n → Overview → Data tables → `devloop_projects`**.
 
 ```bash
-devloop projects --all --remote   # ● = on, ○ = off (reads the n8n switch)
+devloop projects --all --remote   # ● = on, ○ = off (reads n8n)
 ```
 
 ## 4. Daily commands
