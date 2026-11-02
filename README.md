@@ -126,6 +126,17 @@ You can use the Telegram buttons, or these commands. Both do the same thing.
 | `devloop retry <task-id>` | 🔄 Retry | A failed task runs again within 2 minutes. |
 | (close it) | ❌ Dismiss | A failed task is closed. |
 
+Each proposal card also has:
+
+- **🔨 Haiku / Sonnet / Opus / def** and **🔨 low … max / def**: the model and effort that
+  build **this task only**. They win over the project settings. You can change them until
+  the build starts.
+- **✏️ Feedback**: the bot asks for your notes. Reply to its message. Then choose:
+  - **✅ Approve with these notes**: the task is built, and the agent follows your notes
+    where they differ from the plan.
+  - **🔁 Rewrite the proposal**: the watcher rewrites the idea with your notes, and you get a
+    new card for the same task within a few minutes.
+
 ### Run things now instead of waiting
 
 ```bash
