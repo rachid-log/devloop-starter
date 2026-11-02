@@ -120,6 +120,7 @@ You can use the Telegram buttons, or these commands. Both do the same thing.
 | Command | Telegram button | What it does |
 | --- | --- | --- |
 | `devloop approve <task-id>` | ✅ Approve | The task is built within 2 minutes. |
+| `devloop queue <task-id>` | 📥 Queue | The task waits in the queue. `/queue` builds the whole queue. |
 | `devloop reject <task-id> --reason "..."` | ❌ Reject | The task is closed. Works on finished tasks too. |
 | `devloop merge <task-id>` | 🚀 Merge to main & Push | Merge the finished branch into main and push. The command does it now; the button within 2 minutes. |
 | (keep the branch) | 👀 Keep Branch | Close the task but keep its branch for you to review. |
@@ -136,6 +137,11 @@ Each proposal card also has:
     where they differ from the plan.
   - **🔁 Rewrite the proposal**: the watcher rewrites the idea with your notes, and you get a
     new card for the same task within a few minutes.
+- **📥 Queue**: keep the task for later instead of building it now. A queued task does not
+  block new proposals, so ideas keep coming. Send **`/queue`** to the bot to see the list,
+  then **▶️ Build all now**: every queued task is built one after another, each on its own
+  branch. Same from the terminal: `devloop queue <task-id>`, `devloop queue`,
+  `devloop queue --run`.
 
 ### Run things now instead of waiting
 
