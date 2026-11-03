@@ -71,6 +71,16 @@ Rules:
   Otherwise Devloop skips the project with a warning.
 - Commit `.watched.json` in the project repo.
 
+### Check your config
+
+```bash
+python3 validate_config.py [path]   # no path = .watched.json in the current folder
+```
+
+Devloop does not stop on a bad value: it quietly uses a default (`1h`, `General`, a generic
+goal), so run this check after editing `.watched.json`. It is stricter than Devloop on
+purpose: it only accepts the exact forms in the table above (`BL`, not `bl`).
+
 ## 3. The Telegram bot
 
 Send **`/start`** to the bot once. It explains how Devloop works and adds three buttons
