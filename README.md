@@ -136,6 +136,10 @@ When a build ends you get:
 
 After you press a button, the card says what happens next.
 
+**One thread per idea.** Everything about an idea replies to its card: your notes, "Building",
+🎉 Built, ⚠️ Couldn't finish and 🚀 Merged. Tap the quote above any of them to jump back to
+the card. A rewrite with your notes updates the same card instead of sending a new one.
+
 While Devloop works you see a silent message: **🔍 Looking for an idea**, **🔁 Rewriting
 the idea** or **🔨 Building** (with the model and the start time). It goes away by itself
 when the result card arrives.
