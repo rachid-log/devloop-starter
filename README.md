@@ -131,12 +131,13 @@ purpose: it only accepts the exact forms in the table above (`BL`, not `bl`).
 
 ## 3. The Telegram bot
 
-Send **`/start`** to the bot once. It explains how Devloop works and adds three buttons
+Send **`/start`** to the bot once. It explains how Devloop works and adds four buttons
 under the chat that stay there:
 
 | Button | What it does |
 | --- | --- |
 | 📂 Projects | Your projects. Tap one to open its card. |
+| 📋 Tasks | Every task, for all projects or one, by what it needs: 🙋 needs you, 🚀 to merge (with Merge and Keep right in the list), 🔨 in progress, ✅ done. Tap a task to bring its card to the bottom of the chat. |
 | 📥 Queue | The ideas you kept for later. Tap one to leave it out (▫️) or put it back (✅). Then ▶️ Build the selected ones, or 🗑 Drop the left-out ones. ✅ Select all and ▫️ Leave all out do it for every idea. |
 | ❓ Help | The short guide again. |
 
@@ -235,13 +236,17 @@ computer and on GitHub. The project is free for new ideas again. Merge it later 
 
 After you press a button, the card says what happens next.
 
-**One thread per idea.** Everything about an idea replies to its card: your notes, "Building",
-🎉 Built, ⚠️ Couldn't finish and 🚀 Merged. Tap the quote above any of them to jump back to
-the card. A rewrite with your notes updates the same card instead of sending a new one.
+**One card per task.** Each task lives in a single message that changes as the task moves:
+💡 idea → ✅ approved → 🔨 building since 15:50 → 🎉 built → 🚀 merged (or ⚠️ couldn't finish,
+with 🔄 Try again). No new message for each step. When the demo video is ready, the video takes
+the card's place (Telegram can't add a video to a text message), with the same text and buttons.
 
-While Devloop works you see a silent message: **🔍 Looking for an idea**, **🔁 Rewriting
-the idea** or **🔨 Building** (with the model and the start time). It goes away by itself
-when the result card arrives.
+- **📄 The idea** shows the full idea on the card; **⬅ Back** returns.
+- **✏️ Feedback**: the bot asks for your notes; once you reply, the question and your reply are
+  deleted and the notes show on the card, with ✅ Approve with these notes / 🔁 Rewrite /
+  💾 Just keep them.
+- Pressing a button on an older message of a task makes that message the task's card again.
+- **📋 Tasks → tap a task** moves its card to the bottom of the chat.
 
 ### Run things now instead of waiting
 
