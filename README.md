@@ -71,27 +71,29 @@ Rules:
   Otherwise Devloop skips the project with a warning.
 - Commit `.watched.json` in the project repo.
 
-## 3. Control a project from Telegram
+## 3. The Telegram bot
 
-Send **`/projects`** to the bot (it is in the bot's menu). Tap a project to open its card:
+Send **`/start`** to the bot once. It explains how Devloop works and adds three buttons
+under the chat that stay there:
 
-| Button row | What it sets |
+| Button | What it does |
 | --- | --- |
-| ⏸ Turn OFF / ▶️ Turn ON | Whether Devloop works on the project. |
-| 🔍 Observe now | Ask for a proposal within about 2 minutes, without waiting for `watch_freq`. If none comes, the bot says why. |
-| 👁 Haiku / Sonnet / Opus / def | Model of the **watcher** (proposes tasks). |
-| 👁 low … max / def | Effort of the watcher. |
-| 🔨 Haiku / Sonnet / Opus / def | Model of the **builder** (writes the code). |
-| 🔨 low … max / def | Effort of the builder. |
-| ⏱ 10m … 1d | Minimum time between two proposals. |
+| 📂 Projects | Your projects. Tap one to open its card. |
+| 📥 Queue | The ideas you kept for later, with ▶️ Build all now. |
+| ❓ Help | The short guide again. |
 
-- `def` means: use the value in `.watched.json`, or else the Devloop `.env`.
-- Which value wins: **the task**, then **Telegram**, then **`.watched.json`**, then **`.env`**.
-- Once a value is set from Telegram, editing it in `.watched.json` has no effect.
-  Press `def` in Telegram to give control back to the file.
-- Only your Telegram account can press these buttons.
+**A project card** shows the watcher, the builder and how often new ideas come. Its buttons:
 
-The settings live in n8n: **n8n → Overview → Data tables → `devloop_projects`**.
+- **⏸ Pause / ▶️ Turn on**: whether Devloop works on the project.
+- **🔍 Find an idea now**: an idea within a few minutes, without waiting. If none comes, the
+  bot says why.
+- **👁 Watcher** (finds ideas) and **🔨 Builder** (writes the code): each opens a menu with
+  🧠 Model (⚡ Haiku, ⚖️ Sonnet, 🧠 Opus, or the default) and 🎚 Effort (Low to Max).
+- **⏱ How often**: every 10 min, 30 min, hour, 4 hours, or once a day.
+
+Which value wins: **the idea card**, then **Telegram**, then **`.watched.json`**, then
+**`.env`**. "Default" gives control back to the file. Only your Telegram account can use
+the bot. The settings live in n8n: **n8n → Overview → Data tables → `devloop_projects`**.
 
 ```bash
 devloop projects --all --remote   # ● = on, ○ = off (reads n8n)
@@ -115,33 +117,24 @@ All commands work from any folder.
 
 ### Decide
 
-You can use the Telegram buttons, or these commands. Both do the same thing.
+Each idea card has three rows:
 
-| Command | Telegram button | What it does |
+| Button | What it does | Same from the terminal |
 | --- | --- | --- |
-| `devloop approve <task-id>` | ✅ Approve | The task is built within 2 minutes. |
-| `devloop queue <task-id>` | 📥 Queue | The task waits in the queue. `/queue` builds the whole queue. |
-| `devloop reject <task-id> --reason "..."` | ❌ Reject | The task is closed. Works on finished tasks too. |
-| `devloop merge <task-id>` | 🚀 Merge to main & Push | Merge the finished branch into main and push. The command does it now; the button within 2 minutes. |
-| (keep the branch) | 👀 Keep Branch | Close the task but keep its branch for you to review. |
-| `devloop retry <task-id>` | 🔄 Retry | A failed task runs again within 2 minutes. |
-| (close it) | ❌ Dismiss | A failed task is closed. |
+| ✅ Approve | Built within 2 minutes. You get a message when it is done. | `devloop approve <task-id>` |
+| ❌ Reject | Closed. The next idea will be a different one. | `devloop reject <task-id>` |
+| ✏️ Feedback | The bot asks for your notes. Reply to its message, then pick ✅ Approve with these notes, 🔁 Rewrite the idea, or 💾 Just keep them. | — |
+| 📥 Later | Kept in the queue. It does not block new ideas. 📥 Queue → ▶️ Build all builds them one after another. | `devloop queue <task-id>`, `devloop queue --run` |
+| ⚙️ Builder | Model and effort for this idea only. Change them until the build starts. | — |
 
-Each proposal card also has:
+When a build ends you get:
 
-- **🔨 Haiku / Sonnet / Opus / def** and **🔨 low … max / def**: the model and effort that
-  build **this task only**. They win over the project settings. You can change them until
-  the build starts.
-- **✏️ Feedback**: the bot asks for your notes. Reply to its message. Then choose:
-  - **✅ Approve with these notes**: the task is built, and the agent follows your notes
-    where they differ from the plan.
-  - **🔁 Rewrite the proposal**: the watcher rewrites the idea with your notes, and you get a
-    new card for the same task within a few minutes.
-- **📥 Queue**: keep the task for later instead of building it now. A queued task does not
-  block new proposals, so ideas keep coming. Send **`/queue`** to the bot to see the list,
-  then **▶️ Build all now**: every queued task is built one after another, each on its own
-  branch. Same from the terminal: `devloop queue <task-id>`, `devloop queue`,
-  `devloop queue --run`.
+| Card | Buttons | Same from the terminal |
+| --- | --- | --- |
+| 🎉 Built | 🚀 Merge into main · 👀 Keep the branch | `devloop merge <task-id>` |
+| ⚠️ Couldn't finish | 🔄 Try again · 🗑 Drop it | `devloop retry <task-id>` |
+
+After you press a button, the card says what happens next.
 
 ### Run things now instead of waiting
 
