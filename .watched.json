@@ -1,7 +1,8 @@
 {
   "name": "devloop-starter",
   "goal": "Continuous stability, automated improvements, and domain optimization",
-  "domain": "BL",
+  "facets": [],
+  "domains_per_cycle": 1,
   "watch_freq": "10m",
   "active": true
 }

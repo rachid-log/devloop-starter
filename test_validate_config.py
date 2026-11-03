@@ -33,7 +33,7 @@ class TestValidateConfig(unittest.TestCase):
         errors = validate_config({})
         self.assertIn("Missing required field: 'goal'", errors)
         self.assertIn("Missing required field: 'watch_freq'", errors)
-        self.assertIn("Missing required field: 'domain'", errors)
+        self.assertNotIn("Missing required field: 'domain'", errors)
         self.assertIn("Missing required field: 'active'", errors)
 
     def test_goal_validation(self):
@@ -66,6 +66,22 @@ class TestValidateConfig(unittest.TestCase):
         for domain in invalid_domains:
             errors = validate_config({"goal": "Fix bugs", "watch_freq": "1h", "domain": domain, "active": True})
             self.assertTrue(any("domain" in e for e in errors), f"Expected {domain} to be invalid")
+
+    def test_facets_validation(self):
+        base = {"goal": "Fix bugs", "watch_freq": "1h", "active": True}
+        for facets in ([], ["ux", "seo"], ["a11y"]):
+            self.assertEqual(validate_config(dict(base, facets=facets)), [], facets)
+        for facets in ("ux", ["UX/UI"], ["nope"], None):
+            errors = validate_config(dict(base, facets=facets))
+            self.assertTrue(any("facets" in e for e in errors), facets)
+
+    def test_domains_per_cycle_validation(self):
+        base = {"goal": "Fix bugs", "watch_freq": "1h", "active": True}
+        for count in (1, 3, 5):
+            self.assertEqual(validate_config(dict(base, domains_per_cycle=count)), [])
+        for count in (0, 6, "2", 1.5, True):
+            errors = validate_config(dict(base, domains_per_cycle=count))
+            self.assertTrue(any("domains_per_cycle" in e for e in errors), count)
 
     def test_active_validation(self):
         self.assertEqual(validate_config({"goal": "Fix bugs", "watch_freq": "1h", "domain": "BL", "active": True}), [])

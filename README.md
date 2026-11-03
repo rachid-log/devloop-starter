@@ -4,8 +4,11 @@ A ready-to-use template for projects watched by [Devloop](https://github.com/rac
 plus a cheat sheet of every command you need.
 
 Every 10 minutes Devloop looks at your idle projects. For each one, an AI agent proposes
-**one** improvement. You approve or reject it in Telegram. Approved work is written on its
-own branch, in its own folder, and it is merged only when you ask.
+improvements across **14 areas** of the product, not only the code: product, design,
+business logic, growth, content, SEO, performance, security, reliability, testing,
+accessibility, analytics, docs and tooling. Each idea is about one area. You approve or
+reject it in Telegram. Approved work is written on its own branch, in its own folder, and it
+is merged only when you ask.
 
 ```text
 every 10 min:  watch -> observe -> (you approve)
@@ -16,17 +19,28 @@ every 2 min:   execute -> commit -> (you ask) -> merge
 
 ## 1. Add a new project
 
-Pick one of the two ways.
+**Easiest: do nothing.** Every folder in `DEV_ROOT` (default `~/DEV`) shows up in Telegram
+under 📂 Projects, paused. Open it, tap ▶️ Turn on, then ✏️ Goal. No `.watched.json` needed.
+
+- A folder that only groups repos (like `LAB`) is not listed itself. Its git repos are.
+- A folder with no git gets `git init` and a first commit at its **first build**, not before.
+  Devloop refuses if the folder holds more than 200 MB or one file over 50 MB
+  (`DEVLOOP_GIT_INIT_MAX_MB`, `DEVLOOP_GIT_INIT_MAX_FILE_MB`).
+- `DEVLOOP_DISCOVER_ALL=0` in the Devloop `.env` turns this off: then only folders with a
+  `.watched.json` are listed.
+
+A `.watched.json` is still useful to set starting values in the repo. Two ways to add one:
 
 **A. With the command (recommended)**
 
 ```bash
-devloop init ~/DEV/my-app --domain UX/UI --goal "Make the checkout page easier to use"
+devloop init ~/DEV/my-app --goal "Get more people through the checkout"
 devloop watch          # register it and sync it to n8n
 devloop projects       # check it is in the list
 ```
 
-Add `--git` if the folder is not a Git repo yet.
+Add `--git` if the folder is not a Git repo yet. Add `--domain SEO` to pin the project to one
+area (see the list below).
 
 **B. By copying this starter**
 
@@ -44,8 +58,9 @@ Devloop finds projects by looking for a `.watched.json` file.
 ```json
 {
   "name": "My App",
-  "goal": "Improve reliability and user experience",
-  "domain": "General",
+  "goal": "Get more people to sign up and stay",
+  "facets": [],
+  "domains_per_cycle": 2,
   "watch_freq": "1h",
   "active": true,
   "observe_effort": "high"
@@ -55,15 +70,48 @@ Devloop finds projects by looking for a `.watched.json` file.
 | Field | What it means |
 | --- | --- |
 | `name` | Display name. Optional: the folder name is used if empty. |
-| `goal` | What the agent should care about. Be specific: it shapes every proposal. |
-| `domain` | `General`, `UX/UI`, `SEO`, `BL` (business logic) or `Security`. |
-| `watch_freq` | Minimum time between two proposals: `10m`, `1h`, `1d`... |
+| `goal` | What the agent should care about. Be specific: it shapes every proposal. A business goal ("more sign-ups") gives better ideas than "stability". |
+| `facets` | Areas the watcher may look at. `[]` means all 14, balanced. Example: `["ux", "growth", "seo"]`. |
+| `domains_per_cycle` | How many ideas one cycle brings, each from a different area: `1` to `5`. Default `1`. |
+| `watch_freq` | Minimum time between two cycles: `10m`, `1h`, `1d`... |
 | `active` | Start value only. After the first `devloop watch`, Telegram (`/projects`) decides. |
 | `observe_model`, `observe_effort` | Optional. Model and effort that propose tasks for this project. |
 | `execute_model`, `execute_effort` | Optional. Model and effort that write the code for this project. |
 
 Effort is one of `low`, `medium`, `high`, `xhigh`, `max`. Empty optional fields use the
 values in the Devloop `.env`.
+
+The old `domain` field is ignored now. `facets` replaced it.
+
+### The 14 areas
+
+| Key | Area | The agent looks as… |
+| --- | --- | --- |
+| `product` | 🧩 Product & features | a product manager |
+| `ux` | 🎨 Design & UX | a product designer |
+| `bl` | ⚙️ Business logic | a domain expert |
+| `growth` | 📈 Growth & marketing | a growth marketer |
+| `content` | ✍️ Content & copy | a copywriter |
+| `seo` | 🔎 SEO | an SEO specialist |
+| `perf` | ⚡ Performance | a performance engineer |
+| `security` | 🔐 Security | a security engineer |
+| `reliability` | 🛟 Reliability | a site reliability engineer |
+| `testing` | 🧪 Testing & QA | a QA engineer |
+| `a11y` | ♿ Accessibility | an accessibility specialist |
+| `analytics` | 📊 Analytics | a product analyst |
+| `docs` | 📚 Docs | a technical writer |
+| `devex` | 🛠 Tooling & CI | a platform engineer |
+
+**How a cycle picks its areas:**
+
+- It counts the areas of the project's last 20 ideas.
+- It takes the areas used least. On a tie, it takes the one used longest ago.
+- With `domains_per_cycle: 3`, the agent runs **3 times, one after another**. Each run is one
+  area and one expert, with a fresh start, so one area does not colour the next.
+- Each run already sees the ideas of the earlier runs, so ideas do not overlap.
+- If an area has nothing worth doing (SEO for a command-line tool), the agent says so. That
+  area is left alone for 7 days, and the next area on the list is tried instead.
+- If the agent fails (timeout, bad answer), the cycle stops. It does not burn more runs.
 
 Rules:
 
@@ -89,17 +137,28 @@ under the chat that stay there:
 | Button | What it does |
 | --- | --- |
 | 📂 Projects | Your projects. Tap one to open its card. |
-| 📥 Queue | The ideas you kept for later, with ▶️ Build all now. |
+| 📥 Queue | The ideas you kept for later. Tap one to leave it out (▫️) or put it back (✅). Then ▶️ Build the selected ones, or 🗑 Drop the left-out ones. ✅ Select all and ▫️ Leave all out do it for every idea. |
 | ❓ Help | The short guide again. |
 
-**A project card** shows the watcher, the builder and how often new ideas come. Its buttons:
+**The project list** has pages of 16. Projects that are on come first.
+
+**A project card** shows the goal, the watcher, the builder, the areas and how often new ideas
+come. Its buttons:
 
 - **⏸ Pause / ▶️ Turn on**: whether Devloop works on the project.
-- **🔍 Find an idea now**: an idea within a few minutes, without waiting. If none comes, the
-  bot says why.
+- **🔍 Find an idea now**: a cycle within a few minutes, without waiting. If no idea comes, the
+  bot says why, as a reply to the card that blocks it.
+- **🎯 Areas**: how many ideas per cycle (1 to 5), and which of the 14 areas are on.
+  **↩️ All areas, balanced** turns them all on again.
 - **👁 Watcher** (finds ideas) and **🔨 Builder** (writes the code): each opens a menu with
   🧠 Model (⚡ Haiku, ⚖️ Sonnet, 🧠 Opus, or the default) and 🎚 Effort (Low to Max).
-- **⏱ How often**: every 10 min, 30 min, hour, 4 hours, or once a day.
+- **⏱ How often**: a new cycle every 10 min, 30 min, hour, 4 hours, or once a day.
+- **💡 My idea**: pick an area (or 🎲 let the watcher decide), then reply with your idea. Within
+  about 2 minutes the watcher reads the project and turns it into a full idea card. Refine it
+  with ✏️ Feedback → 🔁 Rewrite as often as you like, then ✅ Approve it. It works on paused
+  projects too.
+- **✏️ Goal**: the bot asks for the goal. Reply to its message. It replaces the goal in
+  `.watched.json`.
 
 Which value wins: **the idea card**, then **Telegram**, then **`.watched.json`**, then
 **`.env`**. "Default" gives control back to the file. Only your Telegram account can use
@@ -127,22 +186,52 @@ All commands work from any folder.
 
 ### Decide
 
-Each idea card has three rows:
+Each idea card shows its area (for example **📈 Growth & marketing**) and has four rows:
 
 | Button | What it does | Same from the terminal |
 | --- | --- | --- |
 | ✅ Approve | Built within 2 minutes. You get a message when it is done. | `devloop approve <task-id>` |
 | ❌ Reject | Closed. The next idea will be a different one. | `devloop reject <task-id>` |
 | ✏️ Feedback | The bot asks for your notes. Reply to its message, then pick ✅ Approve with these notes, 🔁 Rewrite the idea, or 💾 Just keep them. | — |
-| 📥 Later | Kept in the queue. It does not block new ideas. 📥 Queue → ▶️ Build all builds them one after another. | `devloop queue <task-id>`, `devloop queue --run` |
+| 📥 Later | Kept in the queue. It does not block new ideas. In 📥 Queue you pick which ones to build; they are built one after another. Left-out ideas stay in the queue. | `devloop queue <task-id>`, `devloop queue --run` (builds the selected ones) |
+| 🔀 Idea from another area | Closes this idea and brings one from an area that is not open yet, within a few minutes. The new card replies to the old one. | — |
 | ⚙️ Builder | Model and effort for this idea only. Change them until the build starts. | — |
 
 When a build ends you get:
 
 | Card | Buttons | Same from the terminal |
 | --- | --- | --- |
-| 🎉 Built | 🚀 Merge into main · 👀 Keep the branch | `devloop merge <task-id>` |
+| 🎉 Built | 🚀 Merge into main · 👀 Keep the branch · 🔗 See the changes on GitHub | `devloop merge <task-id>` |
 | ⚠️ Couldn't finish | 🔄 Try again · 🗑 Drop it | `devloop retry <task-id>` |
+
+**🎬 Demo video.** When the idea's area shows on screen (design, product, growth, content,
+accessibility, SEO) and the project is a web app, Devloop records a real demo: an agent starts
+your app from the task branch, clicks through the change like a user, and Playwright records it.
+A desktop part (1280×720) comes first, then a phone part (390×844, centred) when the change shows
+on phones. **The 🎉 card is the video itself**: the summary and the steps are its caption, and
+🚀 Merge, 👀 Keep the branch, 🔗 GitHub and **🎬 Feedback on the video** sit under it.
+
+**🎬 Feedback on the video:** reply with what the video should show, skip or do better. Within
+about 2 minutes the demo is recorded again from the same branch with your notes, and a new 🎉
+card comes. Nothing is rebuilt. When a demo could not be recorded, the button reads 🎬 Try the
+demo again.
+It uses your `node_modules` and your dev env files (`.env`, `.env.local`, `.env.development*`),
+never `.env.deploy` or `.env.production`. If the app can't start (a database, a login, missing
+secrets), the 🎉 card says why instead of sending a video. `DEVLOOP_DEMO=0` turns demos off.
+
+The 🎉 card also shows:
+
+- **🔗 See the changes on GitHub:** after each build the branch is pushed, and the link opens
+  GitHub's compare page (base branch ... task branch). Only for repos with a GitHub `origin`.
+  `DEVLOOP_PUSH_BRANCHES=0` turns the push off.
+- **💻 `devloop open <task-id>`:** tap to copy, run it in any terminal. It checks the branch out
+  in its own review folder (`~/.config/devloop/review/`) and opens it in VS Code. Your project
+  folder stays on its branch. Commits you make there go on the task branch, and 🚀 Merge takes
+  them along. After a merge, it opens the project folder instead.
+
+**What 👀 Keep the branch does:** it closes the idea without merging. The branch stays, on your
+computer and on GitHub. The project is free for new ideas again. Merge it later with
+`devloop merge <task-id>`, or delete it with `git branch -D <branch>`.
 
 After you press a button, the card says what happens next.
 
@@ -179,22 +268,42 @@ systemctl --user enable --now devloop-observe.timer devloop-execute.timer   # st
 
 ## 6. Rules you can rely on
 
+- **Passing failures heal themselves.** Devloop reads the end of the agent's output:
+  - **Claude quota used up:** the build is tried again when the quota resets (the time is read
+    from Claude's message, else 30 minutes). Until then no idea, rewrite or build runs, so no
+    run is wasted. You get one ⏳ message.
+  - **Network problem:** the build is tried again 5 minutes later. 🌐 message.
+  - **Laptop off or crash during a build:** the build starts again on the next run. 🔌 message.
+  - Each build gets **2 automatic retries** (`DEVLOOP_AUTO_RETRIES`). After that, and for any
+    other error (tests fail, bad code, time limit), you get ⚠️ with 🔄 Try again.
+  - Retries and the quota pause live in `~/.config/devloop/retries.json` and `quota_pause.json`.
+    Delete `quota_pause.json` to end a pause early.
+
 - **A human approves every task.** Devloop never approves its own work.
-- **One open task per project.** While a task waits for your answer, is being built, or is
-  finished but not merged, Devloop proposes nothing new for that project. It keeps working
-  on the other projects. Merge, Reject or Keep Branch frees the project.
+- **One open cycle per project.** While any idea of the last cycle waits for your answer, is
+  being built, or is finished but not merged, Devloop starts no new cycle for that project. It
+  keeps working on the other projects. Merge, Reject or Keep Branch on every idea frees the
+  project.
+- **One branch per idea, built one at a time.** The ideas of a cycle are built one after
+  another, never together. Each starts from your main branch as it is at that moment, so merge
+  one before the next is built when they touch the same files. If two branches still clash, the
+  merge stops with ⚠️ and nothing is pushed.
+- **The builder stays in its area.** It is told to change only what its idea's area needs.
 - **One job per project at a time.** A project lock stops observe and execute from working
   on the same project together.
 - **No repeats.** The agent sees earlier proposals and their result, so it does not propose
   a rejected or built idea again.
 - **Work happens on its own branch, in its own folder:** `devloop/<task-id>`, built in a
   separate git worktree. Your folder, your branch and your unsaved work are not touched.
-- **Only a merge touches your folder.** If you have unsaved work then, it is put in
-  `git stash` first.
+- **Only a merge touches your folder, and it puts everything back.** Unsaved work and
+  untracked files are set aside in `git stash` for the merge and restored right after, and you
+  are back on the branch you were on. If they can't be restored by themselves, the log says so
+  and they wait in `git stash list`.
 - **A failed task leaves nothing behind.** If the agent fails, runs out of time
   (`DEVLOOP_EXECUTE_TIMEOUT`, 20 min here) or writes no code, the branch is deleted and you
   get a Telegram message with Retry and Dismiss.
-- **No force-push, ever.**
+- **No force-push, ever.** 🚀 Merge deletes the task branch, its review folder and its GitHub
+  copy after the merge is pushed.
 
 ## 7. Settings
 
@@ -218,7 +327,7 @@ After editing `.env`, run `devloop doctor` to check the result.
 
 | Problem | Fix |
 | --- | --- |
-| My project is not in `devloop projects` | Check `.watched.json` is one valid JSON object, then `devloop watch`. |
+| My project is not in `devloop projects --all` | It must sit in `DEV_ROOT`, or be a git repo one level below a grouping folder. Then `devloop watch`. |
 | It is listed but never gets proposals | It is off in n8n, a task of it is still open or unmerged (`devloop status --repo my-app`), or its `watch_freq` has not passed yet. |
 | A task failed | `devloop show <task-id>` shows why. Then `devloop retry <task-id>` or Dismiss. |
 | Task says "timed out" | The task was too big for the time limit. Split it, or raise `DEVLOOP_EXECUTE_TIMEOUT`. |

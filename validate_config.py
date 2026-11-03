@@ -10,12 +10,20 @@ import sys
 from pathlib import Path
 from typing import Any, List, Tuple, Union
 
+# Old single-area setting. Devloop now ignores it; 'facets' replaced it.
 ALLOWED_DOMAINS = ("General", "UX/UI", "SEO", "BL", "Security")
+
+# The areas Devloop can look at, as written in 'facets' (same keys as FACETS in devloop).
+ALLOWED_FACETS = (
+    "product", "ux", "bl", "growth", "content", "seo", "perf",
+    "security", "reliability", "testing", "a11y", "analytics", "docs", "devex",
+)
+MAX_DOMAINS_PER_CYCLE = 5
 
 # A positive whole number, then m (minutes), h (hours) or d (days): 10m, 1h, 7d.
 WATCH_FREQ_REGEX = re.compile(r"[1-9]\d*[mhd]")
 
-REQUIRED_FIELDS = ("goal", "watch_freq", "domain", "active")
+REQUIRED_FIELDS = ("goal", "watch_freq", "active")
 
 
 def validate_config(config: dict) -> List[str]:
@@ -42,6 +50,22 @@ def validate_config(config: dict) -> List[str]:
         if not isinstance(domain, str) or domain not in ALLOWED_DOMAINS:
             errors.append(
                 f"'domain' must be one of {', '.join(ALLOWED_DOMAINS)} (exact case), got {domain!r}"
+            )
+
+    if "facets" in config:
+        facets = config["facets"]
+        if not isinstance(facets, list) or any(f not in ALLOWED_FACETS for f in facets):
+            errors.append(
+                f"'facets' must be a list of areas from {', '.join(ALLOWED_FACETS)} "
+                f"([] means all of them), got {facets!r}"
+            )
+
+    if "domains_per_cycle" in config:
+        count = config["domains_per_cycle"]
+        if type(count) is not int or not 1 <= count <= MAX_DOMAINS_PER_CYCLE:
+            errors.append(
+                f"'domains_per_cycle' must be a whole number from 1 to {MAX_DOMAINS_PER_CYCLE}, "
+                f"got {count!r}"
             )
 
     if "active" in config:
