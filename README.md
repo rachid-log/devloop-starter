@@ -203,7 +203,7 @@ When a build ends you get:
 
 | Card | Buttons | Same from the terminal |
 | --- | --- | --- |
-| 🎉 Built | 🚀 Merge into main · 👀 Keep the branch · 🔗 See the changes on GitHub | `devloop merge <task-id>` |
+| 🎉 Built | 🚀 Merge · 👀 Keep · 🗑 Delete · 🔗 See the changes on GitHub | `devloop merge <task-id>`, `devloop delete-branch <task-id>` |
 | ⚠️ Couldn't finish | 🔄 Try again · 🗑 Drop it | `devloop retry <task-id>` |
 
 While a task waits for its build, its card has **✖ Cancel the build**. While it builds, it has
@@ -219,7 +219,7 @@ accessibility, SEO) and the project is a web app, Devloop records a real demo: a
 your app from the task branch, clicks through the change like a user, and Playwright records it.
 A desktop part (1280×720) comes first, then a phone part (390×844, centred) when the change shows
 on phones. **The 🎉 card is the video itself**: the summary and the steps are its caption, and
-🚀 Merge, 👀 Keep the branch, 🔗 GitHub and **🎬 Feedback on the video** sit under it.
+🚀 Merge, 👀 Keep, 🗑 Delete, 🔗 GitHub and **🎬 Feedback on the video** sit under it.
 
 **🎬 Feedback on the video:** reply with what the video should show, skip or do better. Within
 about 2 minutes the demo is recorded again from the same branch with your notes, and a new 🎉
@@ -239,9 +239,16 @@ The 🎉 card also shows:
   folder stays on its branch. Commits you make there go on the task branch, and 🚀 Merge takes
   them along. After a merge, it opens the project folder instead.
 
-**What 👀 Keep the branch does:** it closes the idea without merging. The branch stays, on your
-computer and on GitHub. The project is free for new ideas again. Merge it later with
-`devloop merge <task-id>`, or delete it with `git branch -D <branch>`.
+**What 👀 Keep does:** it closes the idea without merging. The branch stays, on your
+computer and on GitHub. The project is free for new ideas again. The closed card keeps
+🚀 Merge and 🗑 Delete, so you can still decide later.
+
+**What 🗑 Delete does:** the card asks first (🗑 Yes, delete it, or ⬅ No, go back). Within about
+2 minutes the laptop deletes the branch on your computer and on GitHub, with its review folder.
+Main is not touched. The task closes, and 📥 Move it to the queue builds the idea again from
+scratch if you want it back. The delete stops, and the card says why, when the review folder
+has unsaved edits or the branch is checked out in one of your folders. Only `devloop/` task
+branches can be deleted this way.
 
 After you press a button, the card says what happens next.
 
