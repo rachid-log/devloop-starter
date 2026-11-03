@@ -136,6 +136,10 @@ When a build ends you get:
 
 After you press a button, the card says what happens next.
 
+While Devloop works you see a silent message: **🔍 Looking for an idea**, **🔁 Rewriting
+the idea** or **🔨 Building** (with the model and the start time). It goes away by itself
+when the result card arrives.
+
 ### Run things now instead of waiting
 
 ```bash
