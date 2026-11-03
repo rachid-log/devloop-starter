@@ -195,6 +195,7 @@ Each idea card shows its area (for example **📈 Growth & marketing**) and has 
 | ❌ Reject | Closed. The next idea will be a different one. | `devloop reject <task-id>` |
 | ✏️ Feedback | The bot asks for your notes. Reply to its message, then pick ✅ Approve with these notes, 🔁 Rewrite the idea, or 💾 Just keep them. | — |
 | 📥 Later | Kept in the queue. It does not block new ideas. In 📥 Queue you pick which ones to build; they are built one after another. Left-out ideas stay in the queue. | `devloop queue <task-id>`, `devloop queue --run` (builds the selected ones) |
+| ✖ Cancel | Closes the idea without a verdict: no "why?" question. The watcher stops waiting for your answer and moves on to new ideas. The closed card has 📥 Move it to the queue to bring it back. | — |
 | 🔀 Idea from another area | Closes this idea and brings one from an area that is not open yet, within a few minutes. The new card replies to the old one. | — |
 | ⚙️ Builder | Model and effort for this idea only. Change them until the build starts. | — |
 
@@ -204,6 +205,14 @@ When a build ends you get:
 | --- | --- | --- |
 | 🎉 Built | 🚀 Merge into main · 👀 Keep the branch · 🔗 See the changes on GitHub | `devloop merge <task-id>` |
 | ⚠️ Couldn't finish | 🔄 Try again · 🗑 Drop it | `devloop retry <task-id>` |
+
+While a task waits for its build, its card has **✖ Cancel the build**. While it builds, it has
+**⏹ Stop the build**: the build stops within 15 seconds and its half-done work is thrown away.
+Both close the task, so the watcher moves on to new ideas. The closed card has
+**📥 Move it to the queue** if you change your mind.
+
+**Why cancel matters:** the watcher proposes nothing new for a project while one of its ideas
+waits for your answer. ✖ Cancel or 📥 Later frees it without judging the idea.
 
 **🎬 Demo video.** When the idea's area shows on screen (design, product, growth, content,
 accessibility, SEO) and the project is a web app, Devloop records a real demo: an agent starts
