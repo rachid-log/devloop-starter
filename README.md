@@ -243,6 +243,13 @@ The 🎉 card also shows:
 computer and on GitHub. The project is free for new ideas again. The closed card keeps
 🚀 Merge and 🗑 Delete, so you can still decide later.
 
+**🧭 Steps:** every built card has it next to 📄 The idea. It opens, on the same card, what the
+agent did, step by step: **what** it changed or checked, **how** (files, commands) and **why**,
+with the tests it ran as one step. ⬅ Back returns to the card. The builder writes these steps at
+the end of each build. A build that ended without them gets them from one small, low-effort
+agent run that reads the build's final message and its git diff. From the terminal:
+`devloop steps <task-id>`, or `devloop steps <task-id> --explain` to write them for an older build.
+
 **What 🗑 Delete does:** the card asks first (🗑 Yes, delete it, or ⬅ No, go back). Within about
 2 minutes the laptop deletes the branch on your computer and on GitHub, with its review folder.
 Main is not touched. The task closes, and 📥 Move it to the queue builds the idea again from
