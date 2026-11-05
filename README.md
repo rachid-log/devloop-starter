@@ -347,9 +347,15 @@ Settings live in the `.env` file of the Devloop repo (not in your project).
 | `DEVLOOP_OBSERVE_TIMEOUT` | Seconds allowed for a proposal. |
 | `DEVLOOP_EXECUTE_TIMEOUT` | Seconds allowed to write the code. |
 | `DEVLOOP_DIRTY_POLICY` | Uncommitted work during a merge: `stash` (default), `abort` or `reset`. |
+| `DEVLOOP_CONVERSATION_REUSE` | `1` (default): with Claude, the observer continues its last conversation for the project, and a build's retry continues that build's conversation. The part already read costs 5% of the normal price. `0` = every run starts fresh. |
+| `DEVLOOP_CONVERSATION_RENEW_AT` | Start a fresh conversation once the last one is this full: `0.40` (default) = 400,000 of Claude's 1,000,000 tokens. |
+| `DEVLOOP_CONVERSATION_IDLE_MINUTES` | Start a fresh conversation when the last one sat unused this long: `55` (default). Claude's discount lasts 60 minutes. |
 | `DEV_ROOT` | Folder scanned for projects. |
 
 After editing `.env`, run `devloop doctor` to check the result.
+
+To see what continuing saves, run `devloop usage` in the Devloop repo. It shows the average
+tokens per run for fresh and continued runs, for the observer and for builds.
 
 ## 8. When something looks wrong
 
